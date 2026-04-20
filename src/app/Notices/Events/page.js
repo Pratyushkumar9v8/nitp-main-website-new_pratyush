@@ -2,7 +2,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../../components/Home/styles/Details.css";
-import { Calendar, MapPin, Download, ExternalLink } from 'lucide-react';
+import { Calendar, MapPin, Download, ExternalLink } from "lucide-react";
 
 const Eventcard = ({
   detail,
@@ -12,40 +12,42 @@ const Eventcard = ({
   event_link,
   doclink,
 }) => {
-  // Helper function to safely parse JSON
   const safeParseJSON = (data, fallback) => {
     try {
-      const parsed = JSON.parse(data);
-      return parsed;
-    } catch (e) {
+      return JSON.parse(data);
+    } catch {
       return fallback;
     }
   };
 
-  // Parse attachments from JSON string
-  const parsedAttachments = typeof attachments === "string" 
-    ? safeParseJSON(attachments, [])
-    : [];
+  // ✅ Fix attachments parsing
+  const parsedAttachments =
+    typeof attachments === "string"
+      ? safeParseJSON(attachments, [])
+      : attachments || [];
 
-  // Parse event_link if it exists
-  const parsedEventLink = event_link
-    ? safeParseJSON(event_link, null)
-    : null;
+  // ✅ Fix "null" string issue
+  const parsedEventLink =
+    event_link && event_link !== "null"
+      ? safeParseJSON(event_link, null)
+      : null;
 
   return (
     <div className="group/item rounded-lg p-3 transition-all hover:bg-purple-50 border border-gray-100 mb-4">
       <p className="mb-3 text-sm text-gray-700">{detail}</p>
+
       <div className="mb-2 flex items-center gap-2 text-sm text-gray-500">
         <Calendar className="h-4 w-4" />
         <span>{time}</span>
       </div>
+
       <div className="mb-3 flex items-center gap-2 text-sm text-gray-500">
         <MapPin className="h-4 w-4" />
         <span>{location}</span>
       </div>
 
-      {/* Display attachments */}
-      {parsedAttachments && parsedAttachments.length > 0 && (
+      {/* Attachments */}
+      {parsedAttachments.length > 0 && (
         <div className="flex flex-col gap-2 mb-3">
           {parsedAttachments.map((attachment, index) => (
             <a
@@ -62,7 +64,7 @@ const Eventcard = ({
         </div>
       )}
 
-      {/* Display links in flex-col to ensure vertical layout */}
+      {/* Links */}
       <div className="flex flex-col gap-2">
         {doclink && (
           <a
@@ -75,6 +77,7 @@ const Eventcard = ({
             Event Registration
           </a>
         )}
+
         {parsedEventLink?.url && (
           <a
             href={parsedEventLink.url.trim()}
@@ -96,36 +99,43 @@ const Page = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
 
+  // ✅ Pagination
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const [totalPages, setTotalPages] = useState(1);
+
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const eventsUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/events?type=active`;
+        const eventsUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/events?type=active&page=${page}&limit=${limit}`;
+
         const response = await axios.get(eventsUrl);
-        
-        // Sort events by updatedAt timestamp in descending order (most recent first)
-        const sortedEvents = response.data.sort((a, b) => {
+        const result = response.data;
+
+        // ✅ Sort correctly using result.data
+        const sortedEvents = (result.data || []).sort((a, b) => {
           const dateA = new Date(parseInt(a.updatedAt));
           const dateB = new Date(parseInt(b.updatedAt));
-          
-          // Check if dates are valid
+
           if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) return 0;
           if (isNaN(dateA.getTime())) return 1;
           if (isNaN(dateB.getTime())) return -1;
-          
+
           return dateB - dateA;
         });
 
         setEvents(sortedEvents);
+        setTotalPages(result.totalPages || 1);
         setIsLoading(false);
       } catch (e) {
-        console.error("Error fetching Events notices:", e);
+        console.error("Error fetching Events:", e);
         setIsLoading(false);
         setFetchError(true);
       }
     };
 
     fetchEvents();
-  }, []);
+  }, [page]);
 
   return (
     <div>
@@ -133,192 +143,78 @@ const Page = () => {
         <div className="text-2xl text-center pb-7 md:pb-10 text-red-950 font-bold">
           <h2>Events</h2>
         </div>
+
         {isLoading ? (
-          <div className="flex justify-center items-center ">
-            <svg
-              version="1.1"
-              id="L1"
-              height="150px"
-              width="150px"
-              x="0px"
-              y="0px"
-              viewBox="0 0 100 100"
-              enable-background="new 0 0 100 100"
-            >
-              <circle
-                fill="none"
-                stroke="#f87171"
-                stroke-width="6"
-                stroke-miterlimit="15"
-                stroke-dasharray="14.2472,14.2472"
-                cx="50"
-                cy="50"
-                r="47"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  attributeType="XML"
-                  type="rotate"
-                  dur="5s"
-                  from="0 50 50"
-                  to="360 50 50"
-                  repeatCount="indefinite"
-                />
-              </circle>
-              <circle
-                fill="none"
-                stroke="#f87171"
-                stroke-width="1"
-                stroke-miterlimit="10"
-                stroke-dasharray="10,10"
-                cx="50"
-                cy="50"
-                r="39"
-              >
-                <animateTransform
-                  attributeName="transform"
-                  attributeType="XML"
-                  type="rotate"
-                  dur="5s"
-                  from="0 50 50"
-                  to="-360 50 50"
-                  repeatCount="indefinite"
-                />
-              </circle>
-              <g fill="#f87171">
-                <rect x="30" y="35" width="5" height="30">
-                  <animateTransform
-                    attributeName="transform"
-                    dur="1s"
-                    type="translate"
-                    values="0 5 ; 0 -5; 0 5"
-                    repeatCount="indefinite"
-                    begin="0.1"
-                  />
-                </rect>
-                <rect x="40" y="35" width="5" height="30">
-                  <animateTransform
-                    attributeName="transform"
-                    dur="1s"
-                    type="translate"
-                    values="0 5 ; 0 -5; 0 5"
-                    repeatCount="indefinite"
-                    begin="0.2"
-                  />
-                </rect>
-                <rect x="50" y="35" width="5" height="30">
-                  <animateTransform
-                    attributeName="transform"
-                    dur="1s"
-                    type="translate"
-                    values="0 5 ; 0 -5; 0 5"
-                    repeatCount="indefinite"
-                    begin="0.3"
-                  />
-                </rect>
-                <rect x="60" y="35" width="5" height="30">
-                  <animateTransform
-                    attributeName="transform"
-                    dur="1s"
-                    type="translate"
-                    values="0 5 ; 0 -5; 0 5"
-                    repeatCount="indefinite"
-                    begin="0.4"
-                  />
-                </rect>
-                <rect x="70" y="35" width="5" height="30">
-                  <animateTransform
-                    attributeName="transform"
-                    dur="1s"
-                    type="translate"
-                    values="0 5 ; 0 -5; 0 5"
-                    repeatCount="indefinite"
-                    begin="0.5"
-                  />
-                </rect>
-              </g>
-            </svg>
+          <div className="flex justify-center items-center">
+            <div className="animate-spin h-10 w-10 border-4 border-red-400 border-t-transparent rounded-full"></div>
           </div>
         ) : fetchError ? (
-          <div className="flex justify-center items-center">
-            <div className="text-center justify-center items-center">
-              <svg
-                width="120px"
-                className=" m-auto"
-                height="120px"
-                viewBox="0 0 16.00 16.00"
-                fill="#e85e5e"
-                stroke="#e85e5e"
-                stroke-width="0.00016"
-              >
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke="#CCCCCC"
-                  stroke-width="0.128"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  {" "}
-                  <path
-                    d="m 3 0 c -1.660156 0 -3 1.339844 -3 3 v 7 c 0 1.660156 1.339844 3 3 3 h 10 c 1.660156 0 3 -1.339844 3 -3 v -7 c 0 -1.660156 -1.339844 -3 -3 -3 z m 0 2 h 10 c 0.554688 0 1 0.445312 1 1 v 7 c 0 0.554688 -0.445312 1 -1 1 h -10 c -0.554688 0 -1 -0.445312 -1 -1 v -7 c 0 -0.554688 0.445312 -1 1 -1 z m 3 2 c -0.550781 0 -1 0.449219 -1 1 s 0.449219 1 1 1 s 1 -0.449219 1 -1 s -0.449219 -1 -1 -1 z m 4 0 c -0.550781 0 -1 0.449219 -1 1 s 0.449219 1 1 1 s 1 -0.449219 1 -1 s -0.449219 -1 -1 -1 z m -2 3 c -1.429688 0 -2.75 0.761719 -3.464844 2 c -0.136718 0.238281 -0.054687 0.546875 0.183594 0.683594 c 0.238281 0.136718 0.546875 0.054687 0.683594 -0.183594 c 0.535156 -0.929688 1.523437 -1.5 2.597656 -1.5 s 2.0625 0.570312 2.597656 1.5 c 0.136719 0.238281 0.445313 0.320312 0.683594 0.183594 c 0.238281 -0.136719 0.320312 -0.445313 0.183594 -0.683594 c -0.714844 -1.238281 -2.035156 -2 -3.464844 -2 z m -3 7 c -1.105469 0 -2 0.894531 -2 2 h 10 c 0 -1.105469 -0.894531 -2 -2 -2 z m 0 0"
-                    fill="#e85e5e"
-                  ></path>{" "}
-                </g>
-              </svg>
-              <div className="pt-10">
-                <p className="text-red-500">
-                  Sorry, failed to fetch the latest events.
-                </p>
-              </div>
-            </div>
+          <div className="text-center text-red-500">
+            <p>Sorry, failed to fetch the latest events.</p>
           </div>
         ) : (
-          <div className="section-content p-0 m-0">
-            {events.length === 0 ? (
-              <p>No events available.</p>
-            ) : (
-              events.map((event, index) => {
-                // Safely parse event dates
-                const parseEventDate = (dateValue) => {
-                  if (!dateValue) return new Date();
-                  const timestamp = typeof dateValue === 'string' ? parseInt(dateValue) : dateValue;
-                  const date = new Date(timestamp);
-                  return isNaN(date.getTime()) ? new Date() : date;
-                };
+          <>
+            <div className="section-content p-0 m-0">
+              {events.length === 0 ? (
+                <p>No events available.</p>
+              ) : (
+                events.map((event, index) => {
+                  const parseEventDate = (val) => {
+                    if (!val) return new Date();
+                    const ts =
+                      typeof val === "string" ? parseInt(val) : val;
+                    const d = new Date(ts);
+                    return isNaN(d.getTime()) ? new Date() : d;
+                  };
 
-                const startDate = parseEventDate(event.eventStartDate);
-                const endDate = parseEventDate(event.eventEndDate);
-                const dayStart = startDate.getDate();
-                const monthStart = startDate.getMonth() + 1;
-                const yearStart = startDate.getFullYear();
-                const dayEnd = endDate.getDate();
-                const monthEnd = endDate.getMonth() + 1;
-                const yearEnd = endDate.getFullYear();
+                  const start = parseEventDate(event.eventStartDate);
+                  const end = parseEventDate(event.eventEndDate);
 
-                return (
-                  <Eventcard
-                    key={index}
-                    detail={event.title}
-                    time={`${dayStart}-${monthStart}-${yearStart} - ${dayEnd}-${monthEnd}-${yearEnd}`}
-                    attachments={event.attachments}
-                    location={event.venue}
-                    event_link={event.event_link}
-                    doclink={event.doclink}
-                  />
-                );
-              })
-            )}
-          </div>
+                  const format = (d) =>
+                    `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
+
+                  return (
+                    <Eventcard
+                      key={index}
+                      detail={event.title}
+                      time={`${format(start)} - ${format(end)}`}
+                      attachments={event.attachments}
+                      location={event.venue}
+                      event_link={event.event_link}
+                      doclink={event.doclink}
+                    />
+                  );
+                })
+              )}
+            </div>
+
+            {/* ✅ Pagination */}
+            <div className="flex justify-center items-center gap-6 mt-10">
+              <button
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 1 || isLoading}
+                className="px-5 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 disabled:opacity-40"
+              >
+                ← Previous
+              </button>
+
+              <span className="text-sm font-medium text-gray-700">
+                Page {page} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page === totalPages || isLoading}
+                className="px-5 py-2 bg-red-600 text-white rounded-lg shadow hover:bg-red-700 disabled:opacity-40"
+              >
+                Next →
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 };
-
-
-
-
 
 export default Page;

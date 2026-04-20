@@ -12,7 +12,7 @@ const DepartmentNotice = ({ dept }) => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/notice?type=${dept.toLowerCase()}`
       );
-      setNotices(response.data);
+      setNotices(response.data.data);
     };
     getData();
   }, [dept]);
