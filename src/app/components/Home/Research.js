@@ -4,6 +4,7 @@ import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import CountUp from "react-countup";
 import ScrollTrigger from "react-scroll-trigger";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 // --- Reusable Modular Components ---
 
@@ -167,7 +168,7 @@ export default function Research() {
         axios.get(`${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/patent?type=count`)
       ]);
 
-      const publications = pubRes.data;
+      const publications = extractApiArray(pubRes);
       const publicationCounts = publications.reduce(
         (acc, pub) => {
           if (pub.conference_name) acc.conferences += 1;
@@ -198,7 +199,7 @@ export default function Research() {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/publications?type=all`
         );
-        const publications = response.data.filter(
+        const publications = extractApiArray(response).filter(
           (paper) =>
             paper.journal_quartile === "Q1" &&
             (paper.publication_year === 2024 || paper.publication_year === 2025)
@@ -226,7 +227,7 @@ export default function Research() {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/project?type=all`
         );
-        const projects = await response.json();
+        const projects = extractApiArray(await response.json());
         const filtered = projects.filter(
           (project) => Number(project.financial_outlay) >= 1000000
         );

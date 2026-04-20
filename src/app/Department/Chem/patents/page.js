@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 const ChePatentsPage = () => {
   const [publications, setPublications] = useState([]);
@@ -26,7 +27,7 @@ const ChePatentsPage = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/patent?type=che`
       );
-      const data = await response.json();
+      const data = extractApiArray(await response.json());
 
       // Group publications by year
       const groupedByYear = data.reduce((acc, publication) => {

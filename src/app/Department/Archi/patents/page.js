@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 const ArchiPatentsPage = () => {
   const [publications, setPublications] = useState([]);
@@ -25,7 +26,7 @@ const ArchiPatentsPage = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/patent?type=arch`
       );
-      const data = await response.json();
+      const data = extractApiArray(await response.json());
 
       // console.log(data);
 

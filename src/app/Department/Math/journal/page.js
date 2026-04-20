@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 const MathJournalPage = () => {
   const [publications, setPublications] = useState({});
@@ -14,7 +15,7 @@ const MathJournalPage = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/publications?type=maths`
       );
-      const data = await response.json();
+      const data = extractApiArray(await response.json());
 
       const groupedByYear = data.reduce((acc, publication) => {
         if (!publication.publication_year) return acc;

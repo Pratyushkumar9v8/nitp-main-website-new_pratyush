@@ -2,7 +2,14 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import "../../components/Home/styles/Details.css";
-import { Briefcase, Calendar, Download, ExternalLink, Star } from "lucide-react";
+import {
+  Briefcase,
+  Calendar,
+  Download,
+  ExternalLink,
+  Star,
+} from "lucide-react";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 const Noticecard = ({ detail, time, attachments, imp, link }) => (
   <div className="notice bg-white rounded-lg p-4 mb-4 shadow-sm hover:shadow-md transition-all border border-gray-100">
@@ -84,15 +91,16 @@ const Page = () => {
         const jobsUrl = `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/notice?type=facultystaffjob&page=${currentPage}&limit=${limit}`;
 
         const response = await axios.get(jobsUrl);
+        const jobsData = extractApiArray(response);
 
-        const filtered = response.data.data.filter(
-  (notice) => notice.isVisible === 1
-);
+        const filtered = jobsData.filter(
+          (notice) => notice.isVisible === 1
+        );
 
         setJobs(filtered);
 
         // ⚠️ If backend gives total count, use it
-        if (response.data.total) {
+        if (response.data?.total) {
           setTotalPages(Math.ceil(response.data.total / limit));
         } else {
           setTotalPages(10); // fallback (adjust if needed)

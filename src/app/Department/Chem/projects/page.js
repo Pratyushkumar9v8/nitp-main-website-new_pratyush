@@ -1,8 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { DepartmentProjects } from "../../../components/department/DepartmentProjects";
-import Spinner from "../../../components/Spinner.js";
-
+import Spinner from "../../../components/Spinner.js";import { extractApiArray } from "@/lib/apiHelpers";
 const ChemProjectsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +22,7 @@ const ChemProjectsPage = () => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API_URL}/api/project?type=che`
       );
-      const data = await response.json();
+      const data = extractApiArray(await response.json());
 
       setData(data);
       setError(null);
