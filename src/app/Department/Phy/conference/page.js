@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 const PhyConferencePage = () => {
   const [publications, setPublications] = useState([]);
@@ -43,7 +44,7 @@ const PhyConferencePage = () => {
           }
         }
       );
-      const data = await response.json();
+      const data = extractApiArray(await response.json());
       console.log("Raw data:", data);
 
 

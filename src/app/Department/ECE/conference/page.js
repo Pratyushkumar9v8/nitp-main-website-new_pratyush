@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { extractApiArray } from "@/lib/apiHelpers";
 
 const ECEConferencePage = () => {
   const [publications, setPublications] = useState([]);
@@ -14,7 +15,7 @@ const ECEConferencePage = () => {
       const response = await fetch(
         `https://admin.nitp.ac.in/api/conference?type=ece`
       );
-      const data = await response.json();
+      const data = extractApiArray(await response.json());
 
       // Group publications by year
       const groupedByYear = data.reduce((acc, publication) => {

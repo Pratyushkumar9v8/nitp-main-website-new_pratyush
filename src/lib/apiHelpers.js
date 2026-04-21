@@ -10,5 +10,9 @@ export function extractApiArray(response) {
     return payload.data;
   }
 
+  if (payload?.conference_data && Array.isArray(payload.conference_data)) {
+    return payload.conference_data;
+  }
+
   return [];
 }
